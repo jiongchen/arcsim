@@ -1,0 +1,8 @@
+build/
+*.user
+*.user.*
+/.svn/
+
+dependencies/*
+!dependencies/include
+!dependencies/lib

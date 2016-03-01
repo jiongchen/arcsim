@@ -348,6 +348,10 @@ void parse_glue_handle (vector<Handle*> &hans, const Json::Value &json,
                         const vector<Cloth> &cloths,
                         const vector<Motion> &motions);
 
+void parse_stitch_handle (vector<Handle*> &hans, const Json::Value &json,
+                          const vector<Cloth> &cloths,
+                          const vector<Motion> &motions);
+
 void parse_handle (vector<Handle*> &hans, const Json::Value &json,
                    const vector<Cloth> &cloths, const vector<Motion> &motions) {
     string type;
@@ -359,6 +363,8 @@ void parse_handle (vector<Handle*> &hans, const Json::Value &json,
         parse_circle_handle(hans, json, cloths, motions);
     else if (type == "glue")
         parse_glue_handle(hans, json, cloths, motions);
+    else if (type == "stitch")
+        parse_stitch_handle(hans, json, cloths, motions);
     else {
         cout << "Unknown handle type " << type << endl;
         abort();
@@ -442,6 +448,14 @@ void parse_glue_handle (vector<Handle*> &hans, const Json::Value &json,
     han->nodes[0] = (Node*)mesh.nodes[ns[0]];
     han->nodes[1] = (Node*)mesh.nodes[ns[1]];
     hans.push_back(han);
+}
+
+void parse_stitch_handle (vector<Handle *> &hans, const Json::Value &json,
+                          const vector<Cloth> &cloths,
+                          const vector<Motion> &motions) {
+  /* TODO */
+  StitchHandle* han = new StitchHandle;
+  hans.push_back(han);
 }
 
 void parse_obstacle (Obstacle&, const Json::Value&, const vector<Motion>&);

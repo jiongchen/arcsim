@@ -77,4 +77,12 @@ struct GlueHandle: public Handle {
     }
 };
 
+struct StitchHandle: public Handle {
+    std::vector<Node*> stitch;
+    std::vector<Constraint*> get_constraints(double t) {
+      return std::vector<Constraint*>();
+    }
+    std::vector<Node*> get_nodes() { return stitch; }
+};
+
 #endif

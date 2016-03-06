@@ -69,7 +69,7 @@ template <typename T> void parse (vector<T> &v, const Json::Value &json) {
 void parse (Cloth&, const Json::Value&);
 void parse_motions (vector<Motion>&, const Json::Value&);
 void parse_handles (vector<Handle*>&, const Json::Value&,
-                    const vector<Cloth>&, const vector<Motion>&);
+                    vector<Cloth>&, const vector<Motion>&);
 void parse_obstacles (vector<Obstacle>&, const Json::Value&,
                       const vector<Motion>&);
 void parse_morphs (vector<Morph>&, const Json::Value&, const vector<Cloth> &);
@@ -328,10 +328,10 @@ void parse (Motion::Point &mp, const Json::Value &json) {
 }
 
 void parse_handle (vector<Handle*> &, const Json::Value &,
-                   const vector<Cloth> &, const vector<Motion> &);
+                   vector<Cloth> &, const vector<Motion> &);
 
 void parse_handles (vector<Handle*> &hans, const Json::Value &jsons,
-                    const vector<Cloth> &cloths, const vector<Motion> &motions){
+                    vector<Cloth> &cloths, const vector<Motion> &motions){
     for (int j = 0; j < jsons.size(); j++)
         parse_handle(hans, jsons[j], cloths, motions);
 }
@@ -349,11 +349,11 @@ void parse_glue_handle (vector<Handle*> &hans, const Json::Value &json,
                         const vector<Motion> &motions);
 
 void parse_stitch_handle (vector<Handle*> &hans, const Json::Value &json,
-                          const vector<Cloth> &cloths,
+                          vector<Cloth> &cloths,
                           const vector<Motion> &motions);
 
 void parse_handle (vector<Handle*> &hans, const Json::Value &json,
-                   const vector<Cloth> &cloths, const vector<Motion> &motions) {
+                   vector<Cloth> &cloths, const vector<Motion> &motions) {
     string type;
     parse(type, json["type"], string("node"));
     int nhans = hans.size();
@@ -450,12 +450,49 @@ void parse_glue_handle (vector<Handle*> &hans, const Json::Value &json,
     hans.push_back(han);
 }
 
+// this function will change the cloth mesh
 void parse_stitch_handle (vector<Handle *> &hans, const Json::Value &json,
-                          const vector<Cloth> &cloths,
+                          vector<Cloth> &cloths,
                           const vector<Motion> &motions) {
-  /* TODO */
   StitchHandle* han = new StitchHandle;
-  hans.push_back(han);
+  int c;
+  parse(c, json["cloth"], 0);
+  int res;
+  parse(res, json["resolution"]);
+
+  Vec3 start_node, end_node;
+  parse(start_node, json["start_node"]);
+  parse(end_node, json["end_node"]);
+
+  Transformation transform;
+  parse(transform, json["transform"]);
+  start_node = transform.apply(start_node);
+  end_node = transform.apply(end_node);
+
+  vector<Node*> nodes;
+  vector<Vert*> verts;
+  Mesh &mesh = cloths[c].mesh;
+  for (int i = 0; i <= res; ++i) {
+    double ratio = 1.0*i/res;
+    Vec3 insert_node = start_node+(end_node-start_node)*ratio;
+    nodes.push_back(new Node(insert_node, Vec3(0)));
+    mesh.add(nodes.back());
+    verts.push_back(new Vert(project<2>(nodes.back()->x), nodes.back()->label));
+    mesh.add(verts.back());
+  }
+  for (int v = 0; v < verts.size(); ++v)
+    connect(verts[v], nodes[v]);
+  // clear current face
+  for (int f = 0; f < mesh.faces.size(); ++f)
+    mesh.remove(mesh.faces[f]);
+  vector<Face*> faces = triangulate(verts);
+  for (int f = 0; f < faces.size(); ++f)
+    mesh.add(faces[f]);
+
+  mark_nodes_to_preserve(mesh);
+  compute_ms_data(mesh);
+
+  //hans.push_back(han);
 }
 
 void parse_obstacle (Obstacle&, const Json::Value&, const vector<Motion>&);

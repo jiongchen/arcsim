@@ -46,4 +46,6 @@ void save_screenshot (const std::string &filename);
 // check that output directory exists; if not, create it
 void ensure_existing_directory (const std::string &path);
 
+std::vector<Face*> triangulate (const std::vector<Vert*> &verts);
+
 #endif

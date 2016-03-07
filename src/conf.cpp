@@ -36,6 +36,18 @@
 #include <fstream>
 #include <png.h>
 #include "sstream"
+
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Delaunay_triangulation_2.h>
+#include <CGAL/Triangulation_vertex_base_with_info_2.h>
+#include "vtk.h"
+
+typedef CGAL::Exact_predicates_inexact_constructions_kernel            Kernel;
+typedef CGAL::Triangulation_vertex_base_with_info_2<unsigned int, Kernel> Vb;
+typedef CGAL::Triangulation_data_structure_2<Vb>                       Tds;
+typedef CGAL::Delaunay_triangulation_2<Kernel, Tds>                    Delaunay;
+typedef Kernel::Point_2                                                Point;
+
 using namespace std;
 
 void parse (bool&, const Json::Value&);
@@ -464,33 +476,72 @@ void parse_stitch_handle (vector<Handle *> &hans, const Json::Value &json,
   parse(start_node, json["start_node"]);
   parse(end_node, json["end_node"]);
 
-  Transformation transform;
-  parse(transform, json["transform"]);
-  start_node = transform.apply(start_node);
-  end_node = transform.apply(end_node);
+  Transformation tr;
+  parse(tr, json["transform"]);
+  start_node = tr.apply(start_node);
+  end_node = tr.apply(end_node);
 
-  vector<Node*> nodes;
-  vector<Vert*> verts;
   Mesh &mesh = cloths[c].mesh;
-  for (int i = 0; i <= res; ++i) {
-    double ratio = 1.0*i/res;
-    Vec3 insert_node = start_node+(end_node-start_node)*ratio;
-    nodes.push_back(new Node(insert_node, Vec3(0)));
-    mesh.add(nodes.back());
-    verts.push_back(new Vert(project<2>(nodes.back()->x), nodes.back()->label));
-    mesh.add(verts.back());
+  vector<pair<Point, unsigned> > points;
+  vector<double> nods;
+  for (int i = 0; i < mesh.nodes.size(); ++i) {
+    Vec3 p = mesh.nodes[i]->x;
+    points.push_back(make_pair(Point(p[0], p[1]), i));
+    nods.push_back(p[0]);
+    nods.push_back(p[1]);
+    nods.push_back(p[2]);
   }
-  for (int v = 0; v < verts.size(); ++v)
-    connect(verts[v], nodes[v]);
-  // clear current face
-  for (int f = 0; f < mesh.faces.size(); ++f)
-    mesh.remove(mesh.faces[f]);
-  vector<Face*> faces = triangulate(verts);
-  for (int f = 0; f < faces.size(); ++f)
-    mesh.add(faces[f]);
+  const int orig_num = points.size();
+  for (int i = 0; i <= res; ++i) {
+    Vec3 p = start_node+1.0*i/res*(end_node-start_node);
+    points.push_back(make_pair(Point(p[0], p[1]), orig_num+i));
+    nods.push_back(p[0]);
+    nods.push_back(p[1]);
+    nods.push_back(p[2]);
+  }
 
-  mark_nodes_to_preserve(mesh);
-  compute_ms_data(mesh);
+  Delaunay triangulation;
+  triangulation.insert(points.begin(), points.end());
+
+  vector<int> tris;
+  for(Delaunay::Finite_faces_iterator fit = triangulation.finite_faces_begin();
+      fit != triangulation.finite_faces_end(); ++fit) {
+    Delaunay::Face_handle face = fit;
+    tris.push_back(face->vertex(0)->info());
+    tris.push_back(face->vertex(1)->info());
+    tris.push_back(face->vertex(2)->info());
+  }
+
+  Mesh temp;
+  for (int n = 0; n < orig_num; ++n)
+    temp.add(new Node(Vec3(nods[3*n+0], nods[3*n+1], nods[3*n+2]), Vec3(0)));
+  for (int n = orig_num; n < nods.size()/3; ++n)
+    temp.add(new Node(Vec3(nods[3*n+0], nods[3*n+1], nods[3*n+2]), Vec3(0), 1));
+
+  for (int f = 0; f < tris.size()/3; ++f) {
+    vector<Vert*> verts;
+    vector<Node*> nodes;
+    for (int j = 0; j < 3; ++j) {
+      int n = tris[3*f+j];
+      nodes.push_back(temp.nodes[n]);
+      if ( !nodes.back()->verts.empty() ) {
+        verts.push_back(nodes.back()->verts[0]);
+      } else {
+        verts.push_back(new Vert(project<2>(nodes.back()->x), nodes.back()->label));
+        temp.add(verts.back());
+      }
+    }
+    for (int v = 0; v < verts.size(); ++v)
+      connect(verts[v], nodes[v]);
+    vector<Face*> faces = triangulate(verts);
+    for (int f = 0; f < faces.size(); ++f)
+      temp.add(faces[f]);
+  }
+
+  mark_nodes_to_preserve(temp);
+  compute_ms_data(temp);
+  delete_mesh(mesh);
+  mesh = deep_copy(temp);
 
   //hans.push_back(han);
 }

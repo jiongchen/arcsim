@@ -462,89 +462,95 @@ void parse_glue_handle (vector<Handle*> &hans, const Json::Value &json,
     hans.push_back(han);
 }
 
-// this function will change the cloth mesh
-void parse_stitch_handle (vector<Handle *> &hans, const Json::Value &json,
-                          vector<Cloth> &cloths,
-                          const vector<Motion> &motions) {
-  StitchHandle* han = new StitchHandle;
-  int c;
-  parse(c, json["cloth"], 0);
-  int res;
-  parse(res, json["resolution"]);
+void parse_stitch_handle(vector<Handle *> &hans, const Json::Value &json,
+                         vector<Cloth> &cloth,
+                         const vector<Motion> &motions) {
 
-  Vec3 start_node, end_node;
-  parse(start_node, json["start_node"]);
-  parse(end_node, json["end_node"]);
-
-  Transformation tr;
-  parse(tr, json["transform"]);
-  start_node = tr.apply(start_node);
-  end_node = tr.apply(end_node);
-
-  Mesh &mesh = cloths[c].mesh;
-  vector<pair<Point, unsigned> > points;
-  vector<double> nods;
-  for (int i = 0; i < mesh.nodes.size(); ++i) {
-    Vec3 p = mesh.nodes[i]->x;
-    points.push_back(make_pair(Point(p[0], p[1]), i));
-    nods.push_back(p[0]);
-    nods.push_back(p[1]);
-    nods.push_back(p[2]);
-  }
-  const int orig_num = points.size();
-  for (int i = 0; i <= res; ++i) {
-    Vec3 p = start_node+1.0*i/res*(end_node-start_node);
-    points.push_back(make_pair(Point(p[0], p[1]), orig_num+i));
-    nods.push_back(p[0]);
-    nods.push_back(p[1]);
-    nods.push_back(p[2]);
-  }
-
-  Delaunay triangulation;
-  triangulation.insert(points.begin(), points.end());
-
-  vector<int> tris;
-  for(Delaunay::Finite_faces_iterator fit = triangulation.finite_faces_begin();
-      fit != triangulation.finite_faces_end(); ++fit) {
-    Delaunay::Face_handle face = fit;
-    tris.push_back(face->vertex(0)->info());
-    tris.push_back(face->vertex(1)->info());
-    tris.push_back(face->vertex(2)->info());
-  }
-
-  Mesh temp;
-  for (int n = 0; n < orig_num; ++n)
-    temp.add(new Node(Vec3(nods[3*n+0], nods[3*n+1], nods[3*n+2]), Vec3(0)));
-  for (int n = orig_num; n < nods.size()/3; ++n)
-    temp.add(new Node(Vec3(nods[3*n+0], nods[3*n+1], nods[3*n+2]), Vec3(0), 1));
-
-  for (int f = 0; f < tris.size()/3; ++f) {
-    vector<Vert*> verts;
-    vector<Node*> nodes;
-    for (int j = 0; j < 3; ++j) {
-      int n = tris[3*f+j];
-      nodes.push_back(temp.nodes[n]);
-      if ( !nodes.back()->verts.empty() ) {
-        verts.push_back(nodes.back()->verts[0]);
-      } else {
-        verts.push_back(new Vert(project<2>(nodes.back()->x), nodes.back()->label));
-        temp.add(verts.back());
-      }
-    }
-    for (int v = 0; v < verts.size(); ++v)
-      connect(verts[v], nodes[v]);
-    vector<Face*> faces = triangulate(verts);
-    for (int f = 0; f < faces.size(); ++f)
-      temp.add(faces[f]);
-  }
-
-  mark_nodes_to_preserve(temp);
-  compute_ms_data(temp);
-  delete_mesh(mesh);
-  mesh = deep_copy(temp);
-
-  //hans.push_back(han);
 }
+
+// this function will change the cloth mesh
+//void parse_stitch_handle (vector<Handle *> &hans, const Json::Value &json,
+//                          vector<Cloth> &cloths,
+//                          const vector<Motion> &motions) {
+//  StitchHandle* han = new StitchHandle;
+//  int c;
+//  parse(c, json["cloth"], 0);
+//  int res;
+//  parse(res, json["resolution"]);
+
+//  Vec3 start_node, end_node;
+//  parse(start_node, json["start_node"]);
+//  parse(end_node, json["end_node"]);
+
+//  Transformation tr;
+//  parse(tr, json["transform"]);
+//  start_node = tr.apply(start_node);
+//  end_node = tr.apply(end_node);
+
+//  Mesh &mesh = cloths[c].mesh;
+//  vector<pair<Point, unsigned> > points;
+//  vector<double> nods;
+//  for (int i = 0; i < mesh.nodes.size(); ++i) {
+//    Vec3 p = mesh.nodes[i]->x;
+//    points.push_back(make_pair(Point(p[0], p[1]), i));
+//    nods.push_back(p[0]);
+//    nods.push_back(p[1]);
+//    nods.push_back(p[2]);
+//  }
+//  const int orig_num = points.size();
+//  for (int i = 0; i <= res; ++i) {
+//    Vec3 p = start_node+1.0*i/res*(end_node-start_node);
+//    points.push_back(make_pair(Point(p[0], p[1]), orig_num+i));
+//    nods.push_back(p[0]);
+//    nods.push_back(p[1]);
+//    nods.push_back(p[2]);
+//  }
+
+//  Delaunay triangulation;
+//  triangulation.insert(points.begin(), points.end());
+
+//  vector<int> tris;
+//  for(Delaunay::Finite_faces_iterator fit = triangulation.finite_faces_begin();
+//      fit != triangulation.finite_faces_end(); ++fit) {
+//    Delaunay::Face_handle face = fit;
+//    tris.push_back(face->vertex(0)->info());
+//    tris.push_back(face->vertex(1)->info());
+//    tris.push_back(face->vertex(2)->info());
+//  }
+
+//  Mesh temp;
+//  for (int n = 0; n < orig_num; ++n)
+//    temp.add(new Node(Vec3(nods[3*n+0], nods[3*n+1], nods[3*n+2]), Vec3(0)));
+//  for (int n = orig_num; n < nods.size()/3; ++n)
+//    temp.add(new Node(Vec3(nods[3*n+0], nods[3*n+1], nods[3*n+2]), Vec3(0), 1));
+
+//  for (int f = 0; f < tris.size()/3; ++f) {
+//    vector<Vert*> verts;
+//    vector<Node*> nodes;
+//    for (int j = 0; j < 3; ++j) {
+//      int n = tris[3*f+j];
+//      nodes.push_back(temp.nodes[n]);
+//      if ( !nodes.back()->verts.empty() ) {
+//        verts.push_back(nodes.back()->verts[0]);
+//      } else {
+//        verts.push_back(new Vert(project<2>(nodes.back()->x), nodes.back()->label));
+//        temp.add(verts.back());
+//      }
+//    }
+//    for (int v = 0; v < verts.size(); ++v)
+//      connect(verts[v], nodes[v]);
+//    vector<Face*> faces = triangulate(verts);
+//    for (int f = 0; f < faces.size(); ++f)
+//      temp.add(faces[f]);
+//  }
+
+//  mark_nodes_to_preserve(temp);
+//  compute_ms_data(temp);
+//  delete_mesh(mesh);
+//  mesh = deep_copy(temp);
+
+//  //hans.push_back(han);
+//}
 
 void parse_obstacle (Obstacle&, const Json::Value&, const vector<Motion>&);
 

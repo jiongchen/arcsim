@@ -13,7 +13,7 @@
     		"nodes": [166, 374, 22, 358, 150, 566, 38, 510, 94, 302],
     		"ws": 1500,
     		"wb": 1e2,
-    		"rest_length_scale": 0.7
+    		"rest_length_scale": 0.64
               },
         	"transform": { // Optional, default identity: Initial pose of mesh
             		"translate": [-0.5, -0.5, 0.5] // Optional
@@ -57,8 +57,8 @@
         {"time": 0, "transform": {"scale": 0.3, "translate": [0,-0.5,0]    }},
         {"time": 1, "transform": {"scale": 0.3, "translate": [0,-0.5,0]  }},
         {"time": 2, "transform": {"scale": 0.3, "translate": [0,-0.5,0]  }},
-        {"time": 3, "transform": {"scale": 0.3, "translate": [0,-1.5,0] }},
-        {"time": 4, "transform": {"scale": 0.3, "translate": [0,0,0]    }},
+        {"time": 3, "transform": {"scale": 0.3, "translate": [0,-0.5,0] }},
+        {"time": 4, "transform": {"scale": 0.3, "translate": [0,-0.5,0]    }},
         {"time": 5, "transform": {"scale": 0.3, "translate": [0,1.5,0]  }},
         {"time": 6, "transform": {"scale": 0.3, "translate": [0,0,0]    }},
         {"time": 7, "transform": {"scale": 0.3, "translate": [0,-0.4,0] }}

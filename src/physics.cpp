@@ -78,7 +78,7 @@ extern "C" {
   void line_bending_hes_(double *hes, const double *x, const double *d1, const double *d2);
 }
 
-double curve_bending_energy (const Node* p0, const Node *p1, const Node *p2, const Node*p3,
+double curve_bending_energy (const Node *p0, const Node *p1, const Node *p2, const Node *p3,
                              const double d1, const double d2, const double wb) {
   double x[12] = {p0->x[0], p0->x[1], p0->x[2], p1->x[0], p1->x[1], p1->x[2],
                   p2->x[0], p2->x[1], p2->x[2], p3->x[0], p3->x[1], p3->x[2]};

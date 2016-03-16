@@ -95,16 +95,6 @@ vector<Constraint*> GlueHandle::get_constraints (double t) {
     return cons;
 }
 
-vector<Constraint*> StitchHandle::get_constraints (double t) {
-  // TODO
-//  vector<Constraint*> cons;
-//  for (int i = 0; i < 3*stitch.size(); ++i) {
-//    StitchCon *con = new StitchCon;
-//    cons.push_back(con);
-//  }
-//  return cons;
-}
-
 void add_position_constraints (const Node *node, const Vec3 &x, double stiff,
                                vector<Constraint*> &cons) {
     for (int i = 0; i < 3; i++) {

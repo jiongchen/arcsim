@@ -32,6 +32,12 @@
 
 struct Cloth {
     Mesh mesh;
+    struct Stitch {
+      std::vector<Node*> nodes;
+      std::vector<double> len;
+      double ws, wb;
+      double rest_length_scale;
+    } stitch;
     struct Material {
         double density; // area density
         StretchingSamples stretching;

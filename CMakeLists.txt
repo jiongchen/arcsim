@@ -21,14 +21,4 @@ find_package(GLUT)
 # OPENGL
 find_package(OpenGL)
 
-file(GLOB source src/*.cpp)
-add_executable(arcsim ${source})
-target_link_libraries(arcsim
-    taucs json alglib
-    blas lapack
-    CGAL
-    gmp
-    ${PNG_LIBRARIES}
-    ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES}
-    ${Boost_LIBRARIES}
-)
+add_subdirectory(src)

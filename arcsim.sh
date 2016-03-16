@@ -1,6 +1,6 @@
 #!/bin/bash
 
-exe=build/arcsim
-cf=conf/sphere.json
+exe=build/src/arcsim
+cf=conf/abc.json
 
 $exe simulate $cf

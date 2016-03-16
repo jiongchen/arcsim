@@ -36,17 +36,17 @@
 #include <fstream>
 #include <png.h>
 #include "sstream"
-
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Delaunay_triangulation_2.h>
-#include <CGAL/Triangulation_vertex_base_with_info_2.h>
 #include "vtk.h"
 
-typedef CGAL::Exact_predicates_inexact_constructions_kernel            Kernel;
-typedef CGAL::Triangulation_vertex_base_with_info_2<unsigned int, Kernel> Vb;
-typedef CGAL::Triangulation_data_structure_2<Vb>                       Tds;
-typedef CGAL::Delaunay_triangulation_2<Kernel, Tds>                    Delaunay;
-typedef Kernel::Point_2                                                Point;
+//#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+//#include <CGAL/Delaunay_triangulation_2.h>
+//#include <CGAL/Triangulation_vertex_base_with_info_2.h>
+
+//typedef CGAL::Exact_predicates_inexact_constructions_kernel            Kernel;
+//typedef CGAL::Triangulation_vertex_base_with_info_2<unsigned int, Kernel> Vb;
+//typedef CGAL::Triangulation_data_structure_2<Vb>                       Tds;
+//typedef CGAL::Delaunay_triangulation_2<Kernel, Tds>                    Delaunay;
+//typedef Kernel::Point_2                                                Point;
 
 using namespace std;
 
@@ -81,7 +81,7 @@ template <typename T> void parse (vector<T> &v, const Json::Value &json) {
 void parse (Cloth&, const Json::Value&);
 void parse_motions (vector<Motion>&, const Json::Value&);
 void parse_handles (vector<Handle*>&, const Json::Value&,
-                    vector<Cloth>&, const vector<Motion>&);
+                    const vector<Cloth>&, const vector<Motion>&);
 void parse_obstacles (vector<Obstacle>&, const Json::Value&,
                       const vector<Motion>&);
 void parse_morphs (vector<Morph>&, const Json::Value&, const vector<Cloth> &);
@@ -210,6 +210,7 @@ void parse (Box &box, const Json::Value &json, const Box &box0) {
 void parse (Transformation&, const Json::Value&);
 void parse (Cloth::Material*&, const Json::Value&);
 void parse (Cloth::Remeshing&, const Json::Value&);
+void parse (Cloth::Stitch&, const Mesh&, const Json::Value&);
 
 struct Velocity {Vec3 v, w; Vec3 o;};
 void parse (Velocity &, const Json::Value &);
@@ -229,6 +230,7 @@ void parse (Cloth &cloth, const Json::Value &json) {
     Velocity velocity;
     parse(velocity, json["velocity"]);
     apply_velocity(cloth.mesh, velocity);
+    parse(cloth.stitch, cloth.mesh, json["stitch"]);
     parse(cloth.materials, json["materials"]);
     parse(cloth.remeshing, json["remeshing"]);
 }
@@ -290,6 +292,24 @@ void parse (Cloth::Remeshing &remeshing, const Json::Value &json) {
     parse(remeshing.aspect_min, json["aspect_min"], -infinity);
 }
 
+void parse (Cloth::Stitch &stitch, const Mesh &mesh, const Json::Value &json) {
+  vector<int> ids;
+  parse(ids, json["nodes"]);
+  for (int i = 0; i < ids.size(); ++i) {
+    stitch.nodes.push_back(mesh.nodes[ids[i]]);
+    stitch.nodes.back()->label = 1;
+  }
+  parse(stitch.ws, json["ws"]);
+  parse(stitch.wb, json["wb"]);
+  parse(stitch.rest_length_scale, json["rest_length_scale"]);
+  // compute rest length
+  stitch.len.resize(stitch.nodes.size()-1);
+  for (int i = 0; i < stitch.nodes.size()-1; ++i) {
+    Vec3 diff = stitch.nodes[i]->x-stitch.nodes[i+1]->x;
+    stitch.len[i] = stitch.rest_length_scale*norm(diff);
+  }
+}
+
 // Other things
 
 void parse (Motion&, const Json::Value&);
@@ -340,10 +360,10 @@ void parse (Motion::Point &mp, const Json::Value &json) {
 }
 
 void parse_handle (vector<Handle*> &, const Json::Value &,
-                   vector<Cloth> &, const vector<Motion> &);
+                   const vector<Cloth> &, const vector<Motion> &);
 
 void parse_handles (vector<Handle*> &hans, const Json::Value &jsons,
-                    vector<Cloth> &cloths, const vector<Motion> &motions){
+                    const vector<Cloth> &cloths, const vector<Motion> &motions){
     for (int j = 0; j < jsons.size(); j++)
         parse_handle(hans, jsons[j], cloths, motions);
 }
@@ -360,12 +380,8 @@ void parse_glue_handle (vector<Handle*> &hans, const Json::Value &json,
                         const vector<Cloth> &cloths,
                         const vector<Motion> &motions);
 
-void parse_stitch_handle (vector<Handle*> &hans, const Json::Value &json,
-                          vector<Cloth> &cloths,
-                          const vector<Motion> &motions);
-
 void parse_handle (vector<Handle*> &hans, const Json::Value &json,
-                   vector<Cloth> &cloths, const vector<Motion> &motions) {
+                   const vector<Cloth> &cloths, const vector<Motion> &motions) {
     string type;
     parse(type, json["type"], string("node"));
     int nhans = hans.size();
@@ -375,8 +391,6 @@ void parse_handle (vector<Handle*> &hans, const Json::Value &json,
         parse_circle_handle(hans, json, cloths, motions);
     else if (type == "glue")
         parse_glue_handle(hans, json, cloths, motions);
-    else if (type == "stitch")
-        parse_stitch_handle(hans, json, cloths, motions);
     else {
         cout << "Unknown handle type " << type << endl;
         abort();
@@ -462,11 +476,15 @@ void parse_glue_handle (vector<Handle*> &hans, const Json::Value &json,
     hans.push_back(han);
 }
 
-void parse_stitch_handle(vector<Handle *> &hans, const Json::Value &json,
-                         vector<Cloth> &cloth,
-                         const vector<Motion> &motions) {
+//void parse_stitch (vector<Handle*> &hans, const Json::Value &json,
+//                          vector<Cloth> &cloths,
+//                          const vector<Motion> &motions);
 
-}
+//void parse_stitch (vector<Handle *> &hans, const Json::Value &json,
+//                          vector<Cloth> &cloth,
+//                         const vector<Motion> &motions) {
+
+//}
 
 // this function will change the cloth mesh
 //void parse_stitch_handle (vector<Handle *> &hans, const Json::Value &json,

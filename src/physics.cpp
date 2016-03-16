@@ -43,7 +43,10 @@ typedef Mat<6,6> Mat6x6;
 typedef Mat<4,6> Mat4x6;
 typedef Mat<3,4> Mat3x4;
 typedef Mat<4,9> Mat4x9;
+typedef Mat<12,12> Mat12x12;
+typedef Vec<12> Vec12;
 typedef Vec<9> Vec9;
+typedef Vec<6> Vec6;
 
 // A kronecker B = [a11 B, a12 B, ..., a1n B;
 //                  a21 B, a22 B, ..., a2n B;
@@ -64,6 +67,52 @@ template <int m> Mat<m,1> colmat (const Vec<m> &v) {
     Mat<1,m> A; for (int i = 0; i < m; i++) A(i,0) = v[i]; return A;}
 template <int n> Mat<1,n> rowmat (const Vec<n> &v) {
     Mat<1,n> A; for (int i = 0; i < n; i++) A(0,i) = v[i]; return A;}
+
+extern "C" {
+  void mass_spring_(double *val, const double *x, const double *d);
+  void mass_spring_jac_(double *jac, const double *x, const double *d);
+  void mass_spring_hes_(double *hes, const double *x, const double *d);
+
+  void line_bending_(double *val, const double *x, const double *d1, const double *d2);
+  void line_bending_jac_(double *jac, const double *x, const double *d1, const double *d2);
+  void line_bending_hes_(double *hes, const double *x, const double *d1, const double *d2);
+}
+
+double curve_bending_energy (const Node* p0, const Node *p1, const Node *p2, const Node*p3,
+                             const double d1, const double d2, const double wb) {
+  double x[12] = {p0->x[0], p0->x[1], p0->x[2], p1->x[0], p1->x[1], p1->x[2],
+                  p2->x[0], p2->x[1], p2->x[2], p3->x[0], p3->x[1], p3->x[2]};
+  double value = 0;
+  line_bending_(&value, x, &d1, &d2);
+  return wb*value;
+}
+
+pair<Mat12x12, Vec12> curve_bending_force (const Node *p0, const Node *p1, const Node *p2, const Node *p3,
+                                           const double d1, const double d2, const double wb) {
+  double x[12] = {p0->x[0], p0->x[1], p0->x[2], p1->x[0], p1->x[1], p1->x[2],
+                  p2->x[0], p2->x[1], p2->x[2], p3->x[0], p3->x[1], p3->x[2]};
+  Vec12 grad;
+  Mat12x12 hess;
+  line_bending_jac_(&grad[0], x, &d1, &d2);
+  line_bending_hes_(&hess(0, 0), x, &d1, &d2);
+  return make_pair(-wb*hess, -wb*grad);
+}
+
+double mass_spring_energy (const Node* p0, const Node* p1, const double d, const double ws) {
+  double x[6] = {p0->x[0], p0->x[1], p0->x[2], p1->x[0], p1->x[1], p1->x[2]};
+  double value = 0;
+  mass_spring_(&value, x, &d);
+  return ws*value;
+}
+
+pair<Mat6x6, Vec6> mass_spring_force(const Node* p0, const Node *p1, const double d, const double ws) {
+  Vec6 grad;
+  Mat6x6 hess;
+  double x[6] = {p0->x[0], p0->x[1], p0->x[2], p1->x[0], p1->x[1], p1->x[2]};
+  mass_spring_jac_(&grad[0], x, &d);
+  mass_spring_hes_(&hess(0, 0), x, &d);
+  return make_pair(-ws*hess, -ws*grad);
+}
 
 template <Space s>
 double stretching_energy (const Face *face) {
@@ -106,9 +155,6 @@ pair<Mat9x9,Vec9> stretching_force (const Face *face) {
     // because may not be positive definite
     return make_pair(-face->a*hess_e, -face->a*grad_e);
 }
-
-typedef Mat<12,12> Mat12x12;
-typedef Vec<12> Vec12;
 
 template <Space s>
 double bending_energy (const Edge *edge) {
@@ -198,6 +244,13 @@ template <int m> void add_subvec (const Vec<m*3> &bsub, const Vec<m,int> &ix, ve
         b[ix[i]] += subvec3(bsub, i);
 }
 
+Vec<2,  int> indices (const Node *n0, const Node *n1) {
+  Vec<2, int> ix;
+  ix[0] = n0->index;
+  ix[1] = n1->index;
+  return ix;
+}
+
 Vec<3,int> indices (const Node *n0, const Node *n1, const Node *n2) {
     Vec<3,int> ix;
     ix[0] = n0->index;
@@ -228,6 +281,13 @@ double internal_energy (const Cloth &cloth) {
         E += stretching_energy<s>(mesh.faces[f]);
     for (int e = 0; e < mesh.edges.size(); e++) {
         E += bending_energy<s>(mesh.edges[e]);
+    }
+    for (int i = 0; i < cloth.stitch.nodes.size()-1; ++i) {
+        E += mass_spring_energy(cloth.stitch.nodes[i], cloth.stitch.nodes[i+1], cloth.stitch.len[i], cloth.stitch.ws);
+    }
+    for (int i = 0; i < cloth.stitch.nodes.size()-2; ++i) {
+        E += curve_bending_energy(cloth.stitch.nodes[i], cloth.stitch.nodes[i+1],
+            cloth.stitch.nodes[i+1], cloth.stitch.nodes[i+2], cloth.stitch.len[i], cloth.stitch.len[i+1], cloth.stitch.wb);
     }
     return E;
 }
@@ -281,7 +341,46 @@ void add_internal_forces (const Cloth &cloth, SpMat<Mat3x3> &A,
             add_subvec(dt*(F + (dt+damping)*J*vs), indices(n0,n1,n2,n3), b);
         }
     }
+    for (int i = 0; i < cloth.stitch.nodes.size()-1; ++i) {
+      const Node *n0 = cloth.stitch.nodes[i], *n1 = cloth.stitch.nodes[i+1];
+      pair<Mat6x6, Vec6> massF = mass_spring_force(n0, n1, cloth.stitch.len[i], cloth.stitch.ws);
+      Vec6 vs = mat_to_vec(Mat3x2(n0->v, n1->v));
+      Mat6x6 J = massF.first;
+      Vec6 F = massF.second;
+      if ( dt == 0 ) {
+        add_submat(-J, indices(n0, n1), A);
+        add_subvec(F, indices(n0, n1), b);
+      } else {
+        Edge* edge = get_edge(n0, n1);
+        double damping = ((*::materials)[edge->adjf[0]->label]->damping +
+                          (*::materials)[edge->adjf[1]->label]->damping)/2.;
+        add_submat(-dt*(dt+damping)*J, indices(n0, n1), A);
+        add_subvec(dt*(F+(dt+damping)*J*vs), indices(n0, n1), b);
+      }
+    }
+    for (int i = 0; i < cloth.stitch.nodes.size()-2; ++i) {
+      const Node *n0 = cloth.stitch.nodes[i], *n1 = cloth.stitch.nodes[i+1],
+          *n2 = cloth.stitch.nodes[i+1], *n3 = cloth.stitch.nodes[i+2];
+      pair<Mat12x12, Vec12> curveF = curve_bending_force(n0, n1, n2, n3, cloth.stitch.len[i], cloth.stitch.len[i+1], cloth.stitch.wb);
+      Vec12 vs = mat_to_vec(Mat3x4(n0->v, n1->v, n2->v, n3->v));
+      Mat12x12 J = curveF.first;
+      Vec12 F = curveF.second;
+      if ( dt == 0 ) {
+        add_submat(-J, indices(n0, n1, n2, n3), A);
+        add_subvec(F, indices(n0, n1, n2, n3), b);
+      } else {
+        Edge *edge1 = get_edge(n0, n1), *edge2 = get_edge(n2, n3);
+        double damping = (
+             (*::materials)[edge1->adjf[0]->label]->damping +
+             (*::materials)[edge1->adjf[1]->label]->damping +
+             (*::materials)[edge2->adjf[0]->label]->damping +
+             (*::materials)[edge2->adjf[1]->label]->damping )/4.;
+        add_submat(-dt*(dt+damping)*J, indices(n0, n1, n2, n3), A);
+        add_subvec(dt*(F+(dt+damping)*J*vs), indices(n0, n1, n2, n3), b);
+      }
+    }
 }
+
 template void add_internal_forces<PS> (const Cloth&, SpMat<Mat3x3>&,
                                        vector<Vec3>&, double);
 template void add_internal_forces<WS> (const Cloth&, SpMat<Mat3x3>&,

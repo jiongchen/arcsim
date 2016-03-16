@@ -9,11 +9,17 @@
     "cloths": [
     	{ 
     	"mesh": "meshes/plane.obj", // Required: Initial mesh See "Creating cloth meshes" in README
+    	"stitch": {
+    		"nodes": [166, 374, 22, 358, 150, 566, 38, 510, 94, 302],
+    		"ws": 1500,
+    		"wb": 1e2,
+    		"rest_length_scale": 0.7
+              },
         	"transform": { // Optional, default identity: Initial pose of mesh
-            		"translate": [-0.5, -1, 0.5] // Optional
+            		"translate": [-0.5, -0.5, 0.5] // Optional
             		//"translate": [0.0, 0.0, 0.0]
             		// "rotate": [<angle>, <axis_x>, <axis_y>, <axis_z>] // Optional
-            		// "scale": <scale> // Optional
+            		// "scale": 0.8 // Optional
         		},
         	"materials": [{ // Required: List of material properties for each cloth.
                         // This is a list because different patches of the
@@ -48,14 +54,14 @@
                   // Motion is interpolated using a cubic Hermite spline
                   // with Catmull-Rom derivatives at keyframes;
                   // derivatives at first and last keyframe are zero
-        {"time": 0, "transform": {"scale": 0.2, "translate": [0,-0.5,0]    }},
-        {"time": 1, "transform": {"scale": 0.2, "translate": [0,-0.5,0]  }},
-        {"time": 2, "transform": {"scale": 0.2, "translate": [0,-0.5,0]  }},
-        {"time": 3, "transform": {"scale": 0.2, "translate": [0,-1.5,0] }},
-        {"time": 4, "transform": {"scale": 0.2, "translate": [0,0,0]    }},
-        {"time": 5, "transform": {"scale": 0.2, "translate": [0,1.5,0]  }},
-        {"time": 6, "transform": {"scale": 0.2, "translate": [0,0,0]    }},
-        {"time": 7, "transform": {"scale": 0.2, "translate": [0,-0.4,0] }}
+        {"time": 0, "transform": {"scale": 0.3, "translate": [0,-0.5,0]    }},
+        {"time": 1, "transform": {"scale": 0.3, "translate": [0,-0.5,0]  }},
+        {"time": 2, "transform": {"scale": 0.3, "translate": [0,-0.5,0]  }},
+        {"time": 3, "transform": {"scale": 0.3, "translate": [0,-1.5,0] }},
+        {"time": 4, "transform": {"scale": 0.3, "translate": [0,0,0]    }},
+        {"time": 5, "transform": {"scale": 0.3, "translate": [0,1.5,0]  }},
+        {"time": 6, "transform": {"scale": 0.3, "translate": [0,0,0]    }},
+        {"time": 7, "transform": {"scale": 0.3, "translate": [0,-0.4,0] }}
     ]],
     // Alternatively, the value of "motions" can be an object as follows:
     // "motions": { // If an object not a list, refers to motion data in file
@@ -67,27 +73,24 @@
     "handles": [
     	{ // List of "handles" i.e. sets of constrained vertices
         		"cloth": 0, // Optional, default 0: Vertices of <i>th cloth
-        		"nodes": [0, 1], // Required: Indices of vertices under this handle.
+        		"nodes": [2, 3], // Required: Indices of vertices under this handle.
                            // Must be boundary vertices in initial mesh,
                            // otherwise they may be deleted by remeshing
       		  // "motion": <j> // Optional: Index of motion to attach to
                             // If omitted, handle does not move
         		"start_time": 0, // Optional, default 0: When handle activates
        		 "end_time": 7 // Optional, default infinity: When handle deactivates
-    	},
-    	{
-    		"type": "stitch",
-    		"cloth": 0,
-    		"start_node": [0.1, 0.4, 0.0],
-    		"end_node": [0.6, 0.4, 0.0],
-    		"transform": { // same as cloth id
-            			"translate": [-0.5, -1, 0.5] 
-        		},
-    		"resolution": 32,
-    		"width": 0.01,
-    		"start_time": 0,
-    		"end_time": 7
     	}
+    	// {
+    	// 	"type": "stitch",
+    	// 	"cloth": 0,
+    	// 	"nodes": [0, 1, 2, 3],
+    	// 	"ws": 1e3,
+    	// 	"wb": 1000,
+    	// 	"rest_length_scale": 0.75,
+    	// 	"start_time": 0,
+    	// 	"end_time": 7
+    	// }
     ],
 
     "obstacles": [{ // List of static or scripted obstacles
@@ -116,6 +119,7 @@
     // "obs_friction": <mu> // Optional, default 0.3: Cloth-obstacle friction
 
     "disable": ["remeshing", "strainlimiting"], 
+    //"disable": ["remeshing"],
     // List of modules to disable. choose any or all of: "proximity" "physics", "strainlimiting", "collision", "remeshing", "separation"
 
     "magic": {

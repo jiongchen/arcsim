@@ -282,12 +282,18 @@ double internal_energy (const Cloth &cloth) {
     for (int e = 0; e < mesh.edges.size(); e++) {
         E += bending_energy<s>(mesh.edges[e]);
     }
-    for (int i = 0; i < cloth.stitch.nodes.size()-1; ++i) {
-        E += mass_spring_energy(cloth.stitch.nodes[i], cloth.stitch.nodes[i+1], cloth.stitch.len[i], cloth.stitch.ws);
+    for (int si = 0; si < cloth.stitches.size(); ++si) {
+      const Cloth::Stitch *curr = cloth.stitches[si];
+      for (int i = 0; i < curr->nodes.size()-1; ++i) {
+          E += mass_spring_energy(curr->nodes[i], curr->nodes[i+1], curr->len[i], curr->ws);
+      }
     }
-    for (int i = 0; i < cloth.stitch.nodes.size()-2; ++i) {
-        E += curve_bending_energy(cloth.stitch.nodes[i], cloth.stitch.nodes[i+1],
-            cloth.stitch.nodes[i+1], cloth.stitch.nodes[i+2], cloth.stitch.len[i], cloth.stitch.len[i+1], cloth.stitch.wb);
+    for (int si = 0; si < cloth.stitches.size(); ++si) {
+      const Cloth::Stitch *curr = cloth.stitches[si];
+      for (int i = 0; i < curr->nodes.size()-2; ++i) {
+        E += curve_bending_energy(curr->nodes[i], curr->nodes[i+1],
+            curr->nodes[i+1], curr->nodes[i+2], curr->len[i], curr->len[i+1], curr->wb);
+      }
     }
     return E;
 }
@@ -341,42 +347,48 @@ void add_internal_forces (const Cloth &cloth, SpMat<Mat3x3> &A,
             add_subvec(dt*(F + (dt+damping)*J*vs), indices(n0,n1,n2,n3), b);
         }
     }
-    for (int i = 0; i < cloth.stitch.nodes.size()-1; ++i) {
-      const Node *n0 = cloth.stitch.nodes[i], *n1 = cloth.stitch.nodes[i+1];
-      pair<Mat6x6, Vec6> massF = mass_spring_force(n0, n1, cloth.stitch.len[i], cloth.stitch.ws);
-      Vec6 vs = mat_to_vec(Mat3x2(n0->v, n1->v));
-      Mat6x6 J = massF.first;
-      Vec6 F = massF.second;
-      if ( dt == 0 ) {
-        add_submat(-J, indices(n0, n1), A);
-        add_subvec(F, indices(n0, n1), b);
-      } else {
-        Edge* edge = get_edge(n0, n1);
-        double damping = ((*::materials)[edge->adjf[0]->label]->damping +
-                          (*::materials)[edge->adjf[1]->label]->damping)/2.;
-        add_submat(-dt*(dt+damping)*J, indices(n0, n1), A);
-        add_subvec(dt*(F+(dt+damping)*J*vs), indices(n0, n1), b);
+    for (int si = 0; si < cloth.stitches.size(); ++si) {
+      const Cloth::Stitch *curr = cloth.stitches[si];
+      for (int i = 0; i < curr->nodes.size()-1; ++i) {
+        const Node *n0 = curr->nodes[i], *n1 = curr->nodes[i+1];
+        pair<Mat6x6, Vec6> massF = mass_spring_force(n0, n1, curr->len[i], curr->ws);
+        Vec6 vs = mat_to_vec(Mat3x2(n0->v, n1->v));
+        Mat6x6 J = massF.first;
+        Vec6 F = massF.second;
+        if ( dt == 0 ) {
+          add_submat(-J, indices(n0, n1), A);
+          add_subvec(F, indices(n0, n1), b);
+        } else {
+          Edge* edge = get_edge(n0, n1);
+          double damping = ((*::materials)[edge->adjf[0]->label]->damping +
+              (*::materials)[edge->adjf[1]->label]->damping)/2.;
+          add_submat(-dt*(dt+damping)*J, indices(n0, n1), A);
+          add_subvec(dt*(F+(dt+damping)*J*vs), indices(n0, n1), b);
+        }
       }
     }
-    for (int i = 0; i < cloth.stitch.nodes.size()-2; ++i) {
-      const Node *n0 = cloth.stitch.nodes[i], *n1 = cloth.stitch.nodes[i+1],
-          *n2 = cloth.stitch.nodes[i+1], *n3 = cloth.stitch.nodes[i+2];
-      pair<Mat12x12, Vec12> curveF = curve_bending_force(n0, n1, n2, n3, cloth.stitch.len[i], cloth.stitch.len[i+1], cloth.stitch.wb);
-      Vec12 vs = mat_to_vec(Mat3x4(n0->v, n1->v, n2->v, n3->v));
-      Mat12x12 J = curveF.first;
-      Vec12 F = curveF.second;
-      if ( dt == 0 ) {
-        add_submat(-J, indices(n0, n1, n2, n3), A);
-        add_subvec(F, indices(n0, n1, n2, n3), b);
-      } else {
-        Edge *edge1 = get_edge(n0, n1), *edge2 = get_edge(n2, n3);
-        double damping = (
-             (*::materials)[edge1->adjf[0]->label]->damping +
-             (*::materials)[edge1->adjf[1]->label]->damping +
-             (*::materials)[edge2->adjf[0]->label]->damping +
-             (*::materials)[edge2->adjf[1]->label]->damping )/4.;
-        add_submat(-dt*(dt+damping)*J, indices(n0, n1, n2, n3), A);
-        add_subvec(dt*(F+(dt+damping)*J*vs), indices(n0, n1, n2, n3), b);
+    for (int si = 0; si < cloth.stitches.size(); ++si) {
+      const Cloth::Stitch *curr = cloth.stitches[si];
+      for (int i = 0; i < curr->nodes.size()-2; ++i) {
+        const Node *n0 = curr->nodes[i], *n1 = curr->nodes[i+1],
+            *n2 = curr->nodes[i+1], *n3 = curr->nodes[i+2];
+        pair<Mat12x12, Vec12> curveF = curve_bending_force(n0, n1, n2, n3, curr->len[i], curr->len[i+1], curr->wb);
+        Vec12 vs = mat_to_vec(Mat3x4(n0->v, n1->v, n2->v, n3->v));
+        Mat12x12 J = curveF.first;
+        Vec12 F = curveF.second;
+        if ( dt == 0 ) {
+          add_submat(-J, indices(n0, n1, n2, n3), A);
+          add_subvec(F, indices(n0, n1, n2, n3), b);
+        } else {
+          Edge *edge1 = get_edge(n0, n1), *edge2 = get_edge(n2, n3);
+          double damping = (
+                (*::materials)[edge1->adjf[0]->label]->damping +
+              (*::materials)[edge1->adjf[1]->label]->damping +
+              (*::materials)[edge2->adjf[0]->label]->damping +
+              (*::materials)[edge2->adjf[1]->label]->damping )/4.;
+          add_submat(-dt*(dt+damping)*J, indices(n0, n1, n2, n3), A);
+          add_subvec(dt*(F+(dt+damping)*J*vs), indices(n0, n1, n2, n3), b);
+        }
       }
     }
 }

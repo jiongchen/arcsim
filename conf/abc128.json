@@ -1,5 +1,5 @@
 {
-    "frame_time": 0.05, // Required: Length of each frame
+    "frame_time": 0.1, // Required: Length of each frame
     "frame_steps": 8, // Optional, default 1: Number of substeps per frame
     "end_time": 10, // Optional, default infinity: Length of simulation in time
     // "end_frame": <frame_num> // Optional, default infinity:

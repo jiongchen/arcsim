@@ -1,5 +1,5 @@
 {
-    "frame_time": 0.05, // Required: Length of each frame
+    "frame_time": 0.1, // Required: Length of each frame
     "frame_steps": 8, // Optional, default 1: Number of substeps per frame
     "end_time": 10, // Optional, default infinity: Length of simulation in time
     // "end_frame": <frame_num> // Optional, default infinity:
@@ -9,19 +9,25 @@
     "cloths": [
     	{ 
     	"mesh": "meshes/plane_64x64.obj", // Required: Initial mesh See "Creating cloth meshes" in README
-    	// "stitches": [{
-    	// 	"nodes": [582, 166, 374, 22, 358, 150, 566, 38, 510, 94, 302, 8],
-    	// 	"ws": 1500,
-    	// 	"wb": 1e2,
-    	// 	"rest_length_scale": 0.64
-     //          },
-     //          {
-     //          	"nodes": [852, 129, 1025, 130, 780, 269, 1031, 270, 1032, 101, 712, 107],
-     //          	"ws": 1500,
-     //          	"wb": 1e2,
-     //          	"rest_length_scale": 0.64
-     //          }
-     //          ],
+    	"stitches": [{
+    		"nodes": [38,1158,358,1958,150,1366,566,2166,22,1118,318,1918,110,1326,526,2126,54,1174,374,1974,166,1382,582,2182, 8],
+    		"ws": 1000,
+    		"wb": 1e2,
+    		"rest_length_scale": 0.72
+              },
+              {
+              	"nodes": [163,1971,371,1171,51,2123,523,1323,107,1915,315,1115,19,2163,563,1363,147,1955,355,1155,35],
+              	"ws": 1000,
+              	"wb": 1e2,
+              	"rest_length_scale": 0.72
+              },
+             {
+                "nodes": [3608,2071,2664,2764,2765,2663,1920,3535,3536,1924,2419,3494,3495,1621,2058,3506],
+                "ws": 1000,
+                "wb": 1e2,
+                "rest_length_scale": 0.72
+              }
+              ],
         	"transform": { // Optional, default identity: Initial pose of mesh
             		"translate": [-0.5, -0.5, 0.5] // Optional
             		//"translate": [0.0, 0.0, 0.0]

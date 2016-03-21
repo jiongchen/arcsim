@@ -12,7 +12,6 @@ add_executable(arcsim ${source} elasticity.f90)
 target_link_libraries(arcsim
     taucs json alglib
     blas lapack
-    gmp
     ${PNG_LIBRARIES}
     ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES}
     ${Boost_LIBRARIES}

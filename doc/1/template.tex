@@ -127,7 +127,7 @@ From last section, we can also see that our model won't cause very serious issue
 
 The general method to improve the efficiency is to resolve some nonlinearities or reduce the dimensionality. As for the latter one, if we choose to use some generalized coordinates to model the stitches, 
 a foreseeable big problem is the coupling of the generalized coordinate system and Euclidean coordinate system, which may involve two-way interactions between stitches and the rest parts of
-the cloth. On the other hand, if we manage to remedy this problem and accelerate the simulation of stitches, I'm not sure how much it will improve the overall performance, after all the solve for the dynamics of a large piece of cloth
+the cloth and cost even more time to solve. On the other hand, if we manage to remedy this problem and accelerate the simulation of stitches, I'm not sure how much it will improve the overall performance, after all the solve for the dynamics of a large piece of cloth
 is always a time consuming job. As we all know, large stiffness will slow the convergence of the iterative solve, but as for physically based simulation, few people is willing to prefer accuracy to speed. 
 Since our stitch model only appends some extra terms to internal forces and system matrix, if only iterated once as ARCSim does, there is almost no impact on the efficiency of the physics step.
 

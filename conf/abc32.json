@@ -1,5 +1,5 @@
 {
-    "frame_time": 1.0, // Required: Length of each frame
+    "frame_time": 0.1, // Required: Length of each frame
     "frame_steps": 8, // Optional, default 1: Number of substeps per frame
     "end_time": 100, // Optional, default infinity: Length of simulation in time
     // "end_frame": <frame_num> // Optional, default infinity:
@@ -12,7 +12,7 @@
     	"stitches": [{
     		"nodes": [582, 166, 374, 22, 358, 150, 566, 38, 510, 94, 302, 8],
     		"ws": 1e3,
-    		"wb": 1e2,
+    		"wb": 0,
     		"rest_length_scale": 0.64
               }
      //          {

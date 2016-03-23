@@ -1,0 +1,54 @@
+{
+    "frame_time": 0.1,
+    "frame_steps": 40,
+    "end_time": 7,
+    "cloths": [{
+        "mesh": "meshes/cylinder.obj",
+        "stitches": [{
+            "nodes": [582, 166, 374, 22, 358, 150, 566, 38, 510, 94, 302, 8],
+            "ws": 1e3,
+            "wb": 0,
+            "rest_length_scale": 0.64
+        }],
+        "materials": [{
+            "data": "materials/gray-interlock.json",
+            "thicken": 2
+            // "yield_curv": 200,
+            // "weakening": 1,
+            // "stretching_mult": 1.0e-2
+        }],
+        "remeshing": {
+            "refine_angle": 0.2,
+            "refine_compression": 3.0e-4,
+            "size": [3e-3, 100e-3],
+            "aspect_min": 0.2
+        }
+    }],
+    "motions": [[
+        {"time": 0, "transform": {"translate": [0, 0, 0]}},
+        {"time": 5, "transform": {"translate": [0, 0, -0.15]}},
+        {"time": 10, "transform": {"translate": [0, 0, 0]}}
+    ]],
+    "obstacles": [{
+        "mesh": "meshes/square.obj",
+        "transform": {"translate": [-0.5,-0.5,-0.2]}
+    }
+    //     "mesh": "meshes/square.obj",
+    //     "transform": {"translate": [-0.5,0.5,0.218], "rotate": [180, 1,0,0]},
+    //     "motion": 0,
+    //     "end_time": 5
+    ],
+    // "handles": [
+    //     { // List of "handles" i.e. sets of constrained vertices
+    //         "cloth": 0, // Optional, default 0: Vertices of <i>th cloth
+    //         "nodes": [433, 413], // Required: Indices of vertices under this handle.
+    //         "start_time": 0, // Optional, default 0: When handle activates
+    //         "end_time": 100 // Optional, default infinity: When handle deactivates
+    //     }
+    // ],
+    "gravity": [0, 0, -9.8],
+    "disable": ["strainlimiting", "remeshing"]
+    // "magic": {
+    //     "handle_stiffness": 1e6
+    // }
+}

@@ -26,6 +26,9 @@
 
 #include "physics.hpp"
 
+#include <boost/unordered/unordered_set.hpp>
+#include <queue>
+
 #include "blockvectors.hpp"
 #include "collisionutil.hpp"
 #include "sparse.hpp"
@@ -76,6 +79,43 @@ extern "C" {
   void line_bending_(double *val, const double *x, const double *d1, const double *d2);
   void line_bending_jac_(double *jac, const double *x, const double *d1, const double *d2);
   void line_bending_hes_(double *hes, const double *x, const double *d1, const double *d2);
+}
+
+void n_ring_nodes (const Node *start, const int n, vector<const Node*> &neighboor) {
+  boost::unordered_set<int> vis;
+  queue<pair<const Node*, int> > q;
+  q.push(make_pair(start, 0));
+  while ( !q.empty() ) {
+    pair<const Node*, int> curr = q.front();
+    q.pop();
+    if ( vis.find(curr.first->index) != vis.end() || curr.second > n)
+      continue;
+    vis.insert(curr.first->index);
+    neighboor.push_back(curr.first);
+    for (int e = 0; e < curr.first->adje.size(); ++e) {
+      Node *next = curr.first->index == curr.first->adje[e]->n[0]->index ? curr.first->adje[e]->n[1] : curr.first->adje[e]->n[0];
+      if ( vis.find(next->index) != vis.end() )
+        continue;
+      else
+        q.push(make_pair(next, curr.second+1));
+    }
+  }
+}
+
+double filter_energy (const vector<const Node*> ring, const double wf) {
+  const Node * center = ring.front();
+  Vec3 left, right;
+  for (int i = 0; i < ring.size(); ++i) {
+    double dist = norm(ring[i]->x-center->x);
+//    left += dist*ring[i]->x;
+//    right += dist*..;
+  }
+  return 0;
+}
+
+vector<pair<Mat3x3, Vec3> > filter_force (const vector<const Node*> ring, const double wf) {
+  vector<pair<Mat3x3, Vec3> > rtn;
+  return rtn;
 }
 
 double curve_bending_energy (const Node *p0, const Node *p1, const Node *p2, const Node *p3,
@@ -284,6 +324,16 @@ double internal_energy (const Cloth &cloth) {
     }
     for (int si = 0; si < cloth.stitches.size(); ++si) {
       const Cloth::Stitch *curr = cloth.stitches[si];
+//      static int count = 0;
+//      if ( count++ == 0 ) {
+//        vector<const Node*> neigh;
+//        cout << "curr: " << curr->nodes[0]->index << endl;
+//        n_ring_nodes(curr->nodes.back(), 2, neigh);
+//        cout << "size: " << neigh.size() << endl;
+//        cout << "n:\n";
+//        for (int k = 0; k < neigh.size(); ++k)
+//          cout << neigh[k]->index << endl;
+//      }
       for (int i = 0; i < curr->nodes.size()-1; ++i) {
           E += mass_spring_energy(curr->nodes[i], curr->nodes[i+1], curr->len[i], curr->ws);
       }
@@ -293,6 +343,14 @@ double internal_energy (const Cloth &cloth) {
 //      for (int i = 0; i < curr->nodes.size()-2; ++i) {
 //        E += curve_bending_energy(curr->nodes[i], curr->nodes[i+1],
 //            curr->nodes[i+1], curr->nodes[i+2], curr->len[i], curr->len[i+1], curr->wb);
+//      }
+//    }
+//    for (int si = 0; si < cloth.stitches.size(); ++si) {
+//      const Cloth::Stitch *curr = cloth.stitches[si];
+//      for (int i = 0; i < curr->nodes.size(); i += 2) {
+//        vector<const Node*> neigh;
+//        n_ring_nodes(curr->nodes[i], 2, neigh);
+//        E += filter_energy(ring, wf);
 //      }
 //    }
     return E;

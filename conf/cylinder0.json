@@ -1,18 +1,31 @@
 {
-    "frame_time": 0.1,
+    "frame_time": 0.05,
     "frame_steps": 40,
     "end_time": 7,
     "cloths": [{
-        "mesh": "meshes/cylinder.obj",
+        "mesh": "meshes/untitled.obj",
+        // "transform": { // Optional, default identity: Initial pose of mesh
+        //     "rotate": [90, 0, 1, 0]
+        // },
         "stitches": [{
-            "nodes": [582, 166, 374, 22, 358, 150, 566, 38, 510, 94, 302, 8],
+            "nodes": [
+            693,760,812,1199,1239,1158,1201,1120,1222,521,637,
+            557,519,757,877,961,923,670,802,717,678,1228,1341,1415,1378,1455,
+            1540,1475,1435,1053,1179,1251,1214,970,1094,1015,979,892,1011,
+            1085,1049,1148,1259,1186,1144,1363,
+            1482,1552, 1512, 1288,
+            1407,1329,1298,
+            588,710,792,750,834,816,895,850,452,1662,1580,614,1612,1583,1661,1622,
+            1555,1522,1449,471,611,654,731,774,689,734,967, 693
+            ],
             "ws": 1e3,
-            "wb": 0,
-            "rest_length_scale": 0.64
+            "wb": 1500,
+            "rest_length_scale": 0.8
         }],
         "materials": [{
             "data": "materials/gray-interlock.json",
-            "thicken": 2
+            "thicken": 2,
+            "strain_limits": [0.9, 1.1]
             // "yield_curv": 200,
             // "weakening": 1,
             // "stretching_mult": 1.0e-2
@@ -31,7 +44,7 @@
     ]],
     "obstacles": [{
         "mesh": "meshes/square.obj",
-        "transform": {"translate": [-0.5,-0.5,-0.2]}
+        "transform": {"translate": [-0.5,-0.5,-0.1]}
     }
     //     "mesh": "meshes/square.obj",
     //     "transform": {"translate": [-0.5,0.5,0.218], "rotate": [180, 1,0,0]},
@@ -41,13 +54,13 @@
     // "handles": [
     //     { // List of "handles" i.e. sets of constrained vertices
     //         "cloth": 0, // Optional, default 0: Vertices of <i>th cloth
-    //         "nodes": [433, 413], // Required: Indices of vertices under this handle.
+    //         "nodes": [433], // Required: Indices of vertices under this handle.
     //         "start_time": 0, // Optional, default 0: When handle activates
     //         "end_time": 100 // Optional, default infinity: When handle deactivates
     //     }
     // ],
     "gravity": [0, 0, -9.8],
-    "disable": ["strainlimiting", "remeshing"]
+    "disable": ["remeshing", "strainlimiting"]
     // "magic": {
     //     "handle_stiffness": 1e6
     // }

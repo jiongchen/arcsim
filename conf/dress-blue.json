@@ -1,7 +1,7 @@
 // Dress on female character
 // Narain et al. 2012, Figure 10(a)
 {
-    "frame_time": 0.04,
+    "frame_time": 0.5, //0.04,
     "frame_steps": 8,
     "end_time": 20,
     "cloths": [{
@@ -26,5 +26,6 @@
     },
     "obstacles": "meshes/female-objs/body%04d.obj",
     "gravity": [0, 0, -9.8],
+    "disable": ["remeshing"], //
     "magic": {"repulsion_thickness": 5e-3, "collision_stiffness": 1e6}
 }

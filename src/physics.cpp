@@ -150,7 +150,15 @@ pair<Mat6x6, Vec6> mass_spring_force(const Node* p0, const Node *p1, const doubl
   Mat6x6 hess;
   double x[6] = {p0->x[0], p0->x[1], p0->x[2], p1->x[0], p1->x[1], p1->x[2]};
   mass_spring_jac_(&grad[0], x, &d);
-  mass_spring_hes_(&hess(0, 0), x, &d);
+  double curr = norm(p0->x-p1->x);
+  if ( curr > d ) {
+    mass_spring_hes_(&hess(0, 0), x, &d);
+  } else {
+    Vec6 g = grad/(2*sqrt(d)*(curr/d-1.0));
+    for (int i = 0; i < 6; ++i)
+      for (int j = 0; j < 6; ++j)
+        hess(i, j) = g[i]*g[j];
+  }
   return make_pair(-ws*hess, -ws*grad);
 }
 

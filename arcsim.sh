@@ -1,6 +1,6 @@
 #!/bin/bash
 
 exe=build/src/arcsim
-cf=conf/dress-blue.json
+cf=conf/abc64.json
 
 $exe simulate $cf

@@ -299,14 +299,36 @@ void parse (Cloth::Stitch *&stitch, const Mesh &mesh, const Json::Value &json) {
   parse(ids, json["nodes"]);
   for (int i = 0; i < ids.size(); ++i) {
     stitch->nodes.push_back(mesh.nodes[ids[i]]);
-    stitch->nodes.back()->label = 1;
+//    stitch->nodes.back()->label = 1;
   }
   parse(stitch->ws, json["ws"]);
   parse(stitch->wb, json["wb"]);
   parse(stitch->rest_length_scale, json["rest_length_scale"]);
   // compute rest length
   stitch->len.resize(stitch->nodes.size()-1);
+  bool flagu = false, flagv = false;
   for (int i = 0; i < stitch->nodes.size()-1; ++i) {
+//    Node *wu = stitch->nodes[i], *wv = stitch->nodes[i+1];
+//    Vert *mu, *mv;
+//    for (int q = 0; q < wu->verts.size(); ++q) {
+//      if ( wu->verts[q]->node->index == wu->index ) {
+//        flagu = true;
+//        mu = wu->verts[q];
+//        break;
+//      }
+//    }
+//    for (int q = 0; q < wv->verts.size(); ++q) {
+//      if ( wv->verts[q]->node->index == wv->index ) {
+//        flagv = true;
+//        mv = wv->verts[q];
+//        break;
+//      }
+//    }
+//    if ( !flagv || !flagu ) {
+//      cerr << "[error] ws nodes not found\n";
+//      exit(EXIT_FAILURE);
+//    }
+//    Vec2 diff = mu->u-mv->u;
     Vec3 diff = stitch->nodes[i]->x-stitch->nodes[i+1]->x;
     stitch->len[i] = stitch->rest_length_scale*norm(diff);
   }

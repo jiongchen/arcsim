@@ -102,41 +102,41 @@ void n_ring_nodes (const Node *start, const int n, vector<const Node*> &neighboo
   }
 }
 
-double filter_energy (const vector<const Node*> ring, const double wf) {
-  const Node * center = ring.front();
-  Vec3 left, right;
-  for (int i = 0; i < ring.size(); ++i) {
-    double dist = norm(ring[i]->x-center->x);
-//    left += dist*ring[i]->x;
-//    right += dist*..;
-  }
-  return 0;
-}
+//double filter_energy (const vector<const Node*> ring, const double wf) {
+//  const Node * center = ring.front();
+//  Vec3 left, right;
+//  for (int i = 0; i < ring.size(); ++i) {
+//    double dist = norm(ring[i]->x-center->x);
+////    left += dist*ring[i]->x;
+////    right += dist*..;
+//  }
+//  return 0;
+//}
 
-vector<pair<Mat3x3, Vec3> > filter_force (const vector<const Node*> ring, const double wf) {
-  vector<pair<Mat3x3, Vec3> > rtn;
-  return rtn;
-}
+//vector<pair<Mat3x3, Vec3> > filter_force (const vector<const Node*> ring, const double wf) {
+//  vector<pair<Mat3x3, Vec3> > rtn;
+//  return rtn;
+//}
 
-double curve_bending_energy (const Node *p0, const Node *p1, const Node *p2, const Node *p3,
-                             const double d1, const double d2, const double wb) {
-  double x[12] = {p0->x[0], p0->x[1], p0->x[2], p1->x[0], p1->x[1], p1->x[2],
-                  p2->x[0], p2->x[1], p2->x[2], p3->x[0], p3->x[1], p3->x[2]};
-  double value = 0;
-  line_bending_(&value, x, &d1, &d2);
-  return wb*value;
-}
+//double curve_bending_energy (const Node *p0, const Node *p1, const Node *p2, const Node *p3,
+//                             const double d1, const double d2, const double wb) {
+//  double x[12] = {p0->x[0], p0->x[1], p0->x[2], p1->x[0], p1->x[1], p1->x[2],
+//                  p2->x[0], p2->x[1], p2->x[2], p3->x[0], p3->x[1], p3->x[2]};
+//  double value = 0;
+//  line_bending_(&value, x, &d1, &d2);
+//  return wb*value;
+//}
 
-pair<Mat12x12, Vec12> curve_bending_force (const Node *p0, const Node *p1, const Node *p2, const Node *p3,
-                                           const double d1, const double d2, const double wb) {
-  double x[12] = {p0->x[0], p0->x[1], p0->x[2], p1->x[0], p1->x[1], p1->x[2],
-                  p2->x[0], p2->x[1], p2->x[2], p3->x[0], p3->x[1], p3->x[2]};
-  Vec12 grad;
-  Mat12x12 hess;
-  line_bending_jac_(&grad[0], x, &d1, &d2);
-  line_bending_hes_(&hess(0, 0), x, &d1, &d2);
-  return make_pair(-wb*hess, -wb*grad);
-}
+//pair<Mat12x12, Vec12> curve_bending_force (const Node *p0, const Node *p1, const Node *p2, const Node *p3,
+//                                           const double d1, const double d2, const double wb) {
+//  double x[12] = {p0->x[0], p0->x[1], p0->x[2], p1->x[0], p1->x[1], p1->x[2],
+//                  p2->x[0], p2->x[1], p2->x[2], p3->x[0], p3->x[1], p3->x[2]};
+//  Vec12 grad;
+//  Mat12x12 hess;
+//  line_bending_jac_(&grad[0], x, &d1, &d2);
+//  line_bending_hes_(&hess(0, 0), x, &d1, &d2);
+//  return make_pair(-wb*hess, -wb*grad);
+//}
 
 double mass_spring_energy (const Node* p0, const Node* p1, const double d, const double ws) {
   double x[6] = {p0->x[0], p0->x[1], p0->x[2], p1->x[0], p1->x[1], p1->x[2]};
@@ -317,25 +317,28 @@ double internal_energy (const Cloth &cloth) {
     const Mesh &mesh = cloth.mesh;
     ::materials = &cloth.materials;
     double E = 0;
-    for (int f = 0; f < mesh.faces.size(); f++)
+    for (int f = 0; f < mesh.faces.size(); f++) {
         E += stretching_energy<s>(mesh.faces[f]);
+    }
     for (int e = 0; e < mesh.edges.size(); e++) {
         E += bending_energy<s>(mesh.edges[e]);
     }
+    // mass spring energy
     for (int si = 0; si < cloth.stitches.size(); ++si) {
       const Cloth::Stitch *curr = cloth.stitches[si];
-//      static int count = 0;
-//      if ( count++ == 0 ) {
-//        vector<const Node*> neigh;
-//        cout << "curr: " << curr->nodes[0]->index << endl;
-//        n_ring_nodes(curr->nodes.back(), 2, neigh);
-//        cout << "size: " << neigh.size() << endl;
-//        cout << "n:\n";
-//        for (int k = 0; k < neigh.size(); ++k)
-//          cout << neigh[k]->index << endl;
-//      }
       for (int i = 0; i < curr->nodes.size()-1; ++i) {
           E += mass_spring_energy(curr->nodes[i], curr->nodes[i+1], curr->len[i], curr->ws);
+      }
+    }
+    // enlarged bending spring energy
+    for (int si = 0; si < cloth.stitches.size(); ++si) {
+      const Cloth::Stitch *curr = cloth.stitches[si];
+      for (int i = 0; i < curr->nodes.size()-1; ++i) {
+        const Node *m0 = curr->nodes[i], *m1 = curr->nodes[i+1];
+        const Edge *edge = get_edge(m0, m1);
+        if (!edge->adjf[0] || !edge->adjf[1])
+            continue;
+        E += curr->wb*bending_energy<s>(edge);
       }
     }
 //    for (int si = 0; si < cloth.stitches.size(); ++si) {
@@ -405,7 +408,7 @@ void add_internal_forces (const Cloth &cloth, SpMat<Mat3x3> &A,
             add_subvec(dt*(F + (dt+damping)*J*vs), indices(n0,n1,n2,n3), b);
         }
     }
-    // mass spring
+    // mass spring force---------------------------------
     for (int si = 0; si < cloth.stitches.size(); ++si) {
       const Cloth::Stitch *curr = cloth.stitches[si];
       for (int i = 0; i < curr->nodes.size()-1; ++i) {

@@ -8,20 +8,20 @@
 
     "cloths": [
     	{ 
-    	"mesh": "meshes/plane_32x32.obj", // Required: Initial mesh See "Creating cloth meshes" in README
-    	"stitches": [{
-    		"nodes": [582, 166, 374, 22, 358, 150, 566, 38, 510, 94, 302, 8],
-    		"ws": 1e3,
-    		"wb": 0,
-    		"rest_length_scale": 0.64
-              }
+    	"mesh": "meshes/plane_32x32_cut.obj", // Required: Initial mesh See "Creating cloth meshes" in README
+    	// "stitches": [{
+    	// 	"nodes": [582, 166, 374, 22, 358, 150, 566, 38, 510, 94, 302, 8],
+    	// 	"ws": 1e3,
+    	// 	"wb": 0,
+    	// 	"rest_length_scale": 0.64
+     //          }
      //          {
      //          	"nodes": [852, 129, 1025, 130, 780, 269, 1031, 270, 1032, 101, 712, 107],
      //          	"ws": 1e3,
      //          	"wb": 1e2,
      //          	"rest_length_scale": 0.64
      //          }
-              ],
+              // ],
         	"transform": { // Optional, default identity: Initial pose of mesh
             		"translate": [-0.5, -0.5, 0.5] // Optional
             		//"translate": [0.0, 0.0, 0.0]

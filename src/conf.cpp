@@ -26,6 +26,8 @@
 
 #include "conf.hpp"
 
+#include <boost/unordered_set.hpp>
+
 #include "io.hpp"
 #include "magic.hpp"
 #include "mot_parser.hpp"
@@ -217,10 +219,31 @@ struct Velocity {Vec3 v, w; Vec3 o;};
 void parse (Velocity &, const Json::Value &);
 void apply_velocity (Mesh &mesh, const Velocity &vel);
 
+void recalculate_uv(Mesh &mesh) {
+  for (int i = 0; i < mesh.faces.size(); ++i) {
+    Vec3 p1 = mesh.faces[i]->v[0]->node->x;
+    Vec3 p2 = mesh.faces[i]->v[1]->node->x;
+    Vec3 p3 = mesh.faces[i]->v[2]->node->x;
+    Vec3 T = p2-p1;
+    T /= norm(T);
+    Vec3 N = cross(p2-p1, p3-p2);
+    N /= norm(N);
+    Vec3 B = cross(N, T);
+    B /= norm(B);
+    mesh.faces[i]->v[0]->u[0] = 0;
+    mesh.faces[i]->v[0]->u[1] = 0;
+    mesh.faces[i]->v[1]->u[0] = dot(p2-p1, T);
+    mesh.faces[i]->v[1]->u[1] = dot(p2-p1, B);
+    mesh.faces[i]->v[2]->u[0] = dot(p3-p1, T);
+    mesh.faces[i]->v[2]->u[1] = dot(p3-p1, B);
+  }
+}
+
 void parse (Cloth &cloth, const Json::Value &json) {
     string filename;
     parse(filename, json["mesh"]);
     load_obj(cloth.mesh, filename);
+//    recalculate_uv(cloth.mesh);
     Transformation transform;
     parse(transform, json["transform"]);
     if (transform.scale != 1)
@@ -296,18 +319,28 @@ void parse (Cloth::Remeshing &remeshing, const Json::Value &json) {
 void parse (Cloth::Stitch *&stitch, const Mesh &mesh, const Json::Value &json) {
   stitch = new Cloth::Stitch;
   vector<int> ids;
-  parse(ids, json["nodes"]);
+  parse(ids, json["nodes_x"]);
   for (int i = 0; i < ids.size(); ++i) {
-    stitch->nodes.push_back(mesh.nodes[ids[i]]);
-//    stitch->nodes.back()->label = 1;
+    stitch->nodes_x.push_back(mesh.nodes[ids[i]]);
   }
+  parse(ids, json["nodes_y"]);
+  for (int i = 0; i < ids.size(); ++i) {
+    stitch->nodes_y.push_back(mesh.nodes[ids[i]]);
+  }
+  if ( stitch->nodes_x.size() != stitch->nodes_y.size() ) {
+    cerr << "stitch size not match\n";
+    exit(EXIT_FAILURE);
+  }
+  parse(stitch->step, json["step"]);
   parse(stitch->ws, json["ws"]);
-  parse(stitch->wb, json["wb"]);
-  parse(stitch->rest_length_scale, json["rest_length_scale"]);
-  // compute rest length
-  stitch->len.resize(stitch->nodes.size()-1);
-  bool flagu = false, flagv = false;
-  for (int i = 0; i < stitch->nodes.size()-1; ++i) {
+  parse(stitch->thickness, json["thickness"]);
+  parse(stitch->scale, json["scale"]);
+//  parse(stitch->wb, json["wb"]);
+//  parse(stitch->rest_length_scale, json["rest_length_scale"]);
+//  // compute rest length
+//  stitch->len.resize(stitch->nodes.size()-1);
+//  bool flagu = false, flagv = false;
+//  for (int i = 0; i < stitch->nodes.size()-1; ++i) {
 //    Node *wu = stitch->nodes[i], *wv = stitch->nodes[i+1];
 //    Vert *mu, *mv;
 //    for (int q = 0; q < wu->verts.size(); ++q) {
@@ -329,9 +362,9 @@ void parse (Cloth::Stitch *&stitch, const Mesh &mesh, const Json::Value &json) {
 //      exit(EXIT_FAILURE);
 //    }
 //    Vec2 diff = mu->u-mv->u;
-    Vec3 diff = stitch->nodes[i]->x-stitch->nodes[i+1]->x;
-    stitch->len[i] = stitch->rest_length_scale*norm(diff);
-  }
+//    Vec3 diff = stitch->nodes[i]->x-stitch->nodes[i+1]->x;
+//    stitch->len[i] = stitch->rest_length_scale*norm(diff);
+//  }
 }
 
 void parse_stitches (vector<Cloth::Stitch*> &stitches, const Mesh &mesh, const Json::Value &json) {

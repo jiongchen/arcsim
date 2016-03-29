@@ -34,8 +34,10 @@ struct Cloth {
     Mesh mesh;
     struct Stitch {
       std::vector<Node*> nodes_x, nodes_y;
-//      std::vector<double> len;
+      std::vector<double> len_x, len_y;
+      double shrink;
       int step;
+      double stiffness;
       double ws;
 //      double wb;
       double thickness;

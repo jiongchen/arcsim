@@ -1,0 +1,65 @@
+// Dress on female character
+// Narain et al. 2012, Figure 10(a)
+{
+    "frame_time": 0.5, //0.04,
+    "frame_steps": 16,
+    "end_time": 20,
+    "cloths": [{
+        "mesh": "meshes/dress_highres_cut.obj",
+        "stitches": [
+        {              // chest
+            "nodes_x": [14741,14723,14724,14737,14745,14732,1901,14720,
+            14739,14718,14719,14722,14740,14734,2093,14736,19,14727,14728,
+            14738,14742,14725,14726,14731,172,14729,14730,14733
+            ],
+            "nodes_y": [10136,10008,14192,14387,14471,11722,4255,8375,5312,
+            13928,6521,9453,9367,5833,5183,10930,6437,4345,10668,4645,8014,
+            8246,11803,13193,3911,6584,4196,9995
+            ],
+            "shrink": 0.999,
+            "stiffness": 0,
+            "ws": 1000,
+            "thickness": 0.002,
+            "step": 2,
+            "scale": 0.1
+        },
+        {
+           "nodes_x": [4498,6334,13697,11460,6846,6804,14043,9405,11509,
+           11954,14413,4134,11646,11740,7897,11262,8490,7176,13487,5362,
+           7376,7475,13742,7016,7607,4678,7163,12944
+            ],
+            "nodes_y": [44,5076,1181,12396,461,10135,14721,4468,269,4273,1373,
+            4929,653,12062,14735,12244,14743,6190,1084,14282,364,5726,1804,
+            9614,14744,9388,1276,11716
+            ],
+            "shrink": 0.999,
+            "stiffness": 0,
+            "ws": 1000,
+            "thickness": 0.005,
+            "step": 2,
+            "scale": 0.1  
+        }
+        ],
+        "transform": {"rotate": [90, 1, 0, 0]},
+        "materials": [{"data": "materials/navy-sparkle-sweat.json", "bending_mult": 0.1}],
+        "remeshing": {
+            "refine_angle": 0.3,
+            "refine_compression": 0.01,
+            "refine_velocity": 0.5,
+            "size": [10e-3, 200e-3],
+            "aspect_min": 0.2
+        }
+    }],
+    "motions": {
+        "motfile": "meshes/dance-paused.mot",
+        "fps": 30,
+        "transform": {
+            "translate": [0, 0, -1],
+            "rotate": [-90, 0, 0, 1]
+        }
+    },
+    "obstacles": "meshes/female-objs/body%04d.obj",
+    "gravity": [0, 0, -9.8],
+    "disable": ["remeshing", "strainlimiting"],
+    "magic": {"repulsion_thickness": 5e-3, "collision_stiffness": 1e6}
+}

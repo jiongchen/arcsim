@@ -334,9 +334,18 @@ double internal_energy (const Cloth &cloth) {
     // mass spring energy
     for (int si = 0; si < cloth.stitches.size(); ++si) {
       const Cloth::Stitch *curr = cloth.stitches[si];
+      // VERTICAL
       for (int i = 0; i < curr->nodes_x.size(); ++i) {
         double d = i%curr->step==0 ? curr->scale*curr->thickness : curr->thickness;
         E += mass_spring_energy(curr->nodes_x[i], curr->nodes_y[i], d, curr->ws);
+      }
+      // HORIZONTAL X
+      for (int i = 0; i < curr->len_x.size(); ++i) {
+        E += mass_spring_energy(curr->nodes_x[i], curr->nodes_x[i+1], curr->len_x[i], curr->ws);
+      }
+      // HORIZONTAL Y
+      for (int i = 0; i < curr->len_y.size(); ++i) {
+        E += mass_spring_energy(curr->nodes_y[i], curr->nodes_y[i+1], curr->len_y[i], curr->ws);
       }
     }
 //    // enlarged bending spring energy
@@ -421,6 +430,7 @@ void add_internal_forces (const Cloth &cloth, SpMat<Mat3x3> &A,
     // mass spring force---------------------------------
     for (int si = 0; si < cloth.stitches.size(); ++si) {
       const Cloth::Stitch *curr = cloth.stitches[si];
+      // VERTICAL
       for (int i = 0; i < curr->nodes_x.size(); ++i) {
         const Node *n0 = curr->nodes_x[i], *n1 = curr->nodes_y[i];
         double d = i%curr->step==0 ? curr->scale*curr->thickness : curr->thickness;
@@ -435,6 +445,42 @@ void add_internal_forces (const Cloth &cloth, SpMat<Mat3x3> &A,
 //          Edge* edge = get_edge(n0, n1);
           double damping = 0.0;/*((*::materials)[edge->adjf[0]->label]->damping +
               (*::materials)[edge->adjf[1]->label]->damping)/2.;*/
+          add_submat(-dt*(dt+damping)*J, indices(n0, n1), A);
+          add_subvec(dt*(F+(dt+damping)*J*vs), indices(n0, n1), b);
+        }
+      }
+      // HORIZONTAL X
+      for (int i = 0; i < curr->len_x.size(); ++i) {
+        if ( curr->stiffness == 0.0 )
+          break;
+        const Node *n0 = curr->nodes_x[i], *n1 = curr->nodes_x[i+1];
+        pair<Mat6x6, Vec6> massF = mass_spring_force(n0, n1, curr->len_x[i], curr->stiffness);
+        Vec6 vs = mat_to_vec(Mat3x2(n0->v, n1->v));
+        Mat6x6 J = massF.first;
+        Vec6 F = massF.second;
+        if ( dt == 0 ) {
+          add_submat(-J, indices(n0, n1), A);
+          add_subvec(F, indices(n0, n1), b);
+        } else {
+          double damping = 0.0;
+          add_submat(-dt*(dt+damping)*J, indices(n0, n1), A);
+          add_subvec(dt*(F+(dt+damping)*J*vs), indices(n0, n1), b);
+        }
+      }
+      // HORIZONTAL Y
+      for (int i = 0; i < curr->len_y.size(); ++i) {
+        if ( curr->stiffness == 0.0 )
+          break;
+        const Node *n0 = curr->nodes_y[i], *n1 = curr->nodes_y[i+1];
+        pair<Mat6x6, Vec6> massF = mass_spring_force(n0, n1, curr->len_y[i], curr->stiffness);
+        Vec6 vs = mat_to_vec(Mat3x2(n0->v, n1->v));
+        Mat6x6 J = massF.first;
+        Vec6 F = massF.second;
+        if ( dt == 0 ) {
+          add_submat(-J, indices(n0, n1), A);
+          add_subvec(F, indices(n0, n1), b);
+        } else {
+          double damping = 0.0;
           add_submat(-dt*(dt+damping)*J, indices(n0, n1), A);
           add_subvec(dt*(F+(dt+damping)*J*vs), indices(n0, n1), b);
         }

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 exe=build/src/arcsim
-cf=conf/dress-blue.json
+cf=conf/dress-highres.json
 
-$exe simulate $cf
+#$exe simulateoffline $cf ./build/march29
+$exe resumeoffline ./build/march29 1

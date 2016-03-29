@@ -331,10 +331,24 @@ void parse (Cloth::Stitch *&stitch, const Mesh &mesh, const Json::Value &json) {
     cerr << "stitch size not match\n";
     exit(EXIT_FAILURE);
   }
+
+  parse(stitch->shrink, json["shrink"]);
+  stitch->len_x.resize(stitch->nodes_x.size()-1);
+  for (int i = 0; i < stitch->len_x.size(); ++i) {
+    Vec3 diff = stitch->nodes_x[i]->x-stitch->nodes_x[i+1]->x;
+    stitch->len_x[i] = stitch->shrink*norm(diff);
+  }
+  stitch->len_y.resize(stitch->nodes_y.size()-1);
+  for (int i = 0; i < stitch->len_y.size(); ++i) {
+    Vec3 diff = stitch->nodes_y[i]->x-stitch->nodes_y[i+1]->x;
+    stitch->len_y[i] = stitch->shrink*norm(diff);
+  }
+  parse(stitch->stiffness, json["stiffness"]);
   parse(stitch->step, json["step"]);
   parse(stitch->ws, json["ws"]);
   parse(stitch->thickness, json["thickness"]);
   parse(stitch->scale, json["scale"]);
+
 //  parse(stitch->wb, json["wb"]);
 //  parse(stitch->rest_length_scale, json["rest_length_scale"]);
 //  // compute rest length

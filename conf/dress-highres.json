@@ -17,7 +17,7 @@
             8246,11803,13193,3911,6584,4196,9995
             ],
             "shrink": 0.999,
-            "stiffness": 0,
+            "stiffness": 500,
             "ws": 1000,
             "thickness": 0.002,
             "step": 2,
@@ -33,11 +33,11 @@
             9614,14744,9388,1276,11716
             ],
             "shrink": 0.999,
-            "stiffness": 0,
+            "stiffness": 500,
             "ws": 1000,
-            "thickness": 0.005,
+            "thickness": 0.002,
             "step": 2,
-            "scale": 0.1  
+            "scale": 0.1
         }
         ],
         "transform": {"rotate": [90, 1, 0, 0]},

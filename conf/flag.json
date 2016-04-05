@@ -5,7 +5,7 @@
     "frame_steps": 8,
     "duration": 20,
     "cloths": [{
-        "mesh": "meshes/flag.obj",
+        "mesh": "meshes/flag1.obj",
 	"transform": {"translate": [0, 0, 0], "rotate": [120, 1, 1, 1]},
         "materials": [{
 	    "data": "materials/camel-ponte-roma.json",
@@ -20,8 +20,9 @@
             "aspect_min": 0.2
         }
     }],
-    "handles": [{"nodes": [0,3]}],
+    "handles": [{"nodes": [0,2]}],
     "gravity": [0, 0, -9.8],
     "wind": {"velocity": [10, 0, 0]},
+    "disable":["remeshing"],
     "magic": {"repulsion_thickness": 10e-3, "collision_stiffness": 1e6}
 }

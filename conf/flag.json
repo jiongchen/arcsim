@@ -8,9 +8,9 @@
         "mesh": "meshes/flag1.obj",
 	"transform": {"translate": [0, 0, 0], "rotate": [120, 1, 1, 1]},
         "materials": [{
-	    "data": "materials/camel-ponte-roma.json",
+	    "data": "materials/tango-red-jet-set.json", //camel-ponte-roma.json",
             "thicken": 2,
-            "strain_limits": [0.95, 1.05]
+            "strain_limits": [0.99, 1.01]
 	}],
         "remeshing": {
             "refine_angle": 0.3,

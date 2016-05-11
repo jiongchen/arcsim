@@ -125,11 +125,15 @@ void advance_frame (Simulation &sim) {
 void advance_step (Simulation &sim) {
     sim.time += sim.step_time;
     sim.step++;
+    cout << "[Info] time: " << sim.time << " step: " << sim.step << endl;
     update_obstacles(sim, false);
     vector<Constraint*> cons = get_constraints(sim, true);
+    cout << "\t@physics step\n";
     physics_step(sim, cons);
     plasticity_step(sim);
+    cout << "\t@strain limiting step\n";
     strainlimiting_step(sim, cons);
+    cout << "\t@collison step\n";
     collision_step(sim);
     if (sim.step % sim.frame_steps == 0) {
         remeshing_step(sim);
@@ -176,6 +180,7 @@ void physics_step (Simulation &sim, const vector<Constraint*> &cons) {
             if (sim.morphs[m].mesh == &sim.cloths[c].mesh)
                 add_morph_forces(sim.cloths[c], sim.morphs[m], sim.time,
                                  sim.step_time, fext, Jext);
+        cout << "\t@solve equation\n";
         implicit_update(sim.cloths[c], fext, Jext, cons, sim.step_time, false);
     }
     for (int c = 0; c < sim.cloth_meshes.size(); c++)

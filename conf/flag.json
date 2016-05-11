@@ -2,16 +2,17 @@
 // Narain et al. 2012, Figure 8
 {
     "frame_time": 0.04,
-    "frame_steps": 8,
+    "frame_steps": 16,
+    "end_frame": 300,
     "duration": 20,
     "cloths": [{
-        "mesh": "meshes/flag1.obj",
-	"transform": {"translate": [0, 0, 0], "rotate": [120, 1, 1, 1]},
+        "mesh": "meshes/flag2.obj",
+	    "transform": {"translate": [0, 0, 0], "rotate": [120, 1, 1, 1]},
         "materials": [{
-	    "data": "materials/tango-red-jet-set.json", //camel-ponte-roma.json",
+	        "data": "materials/tango-red-jet-set.json", //camel-ponte-roma.json",
             "thicken": 2,
-            "strain_limits": [0.99, 1.01]
-	}],
+            "strain_limits": [0.95, 1.05]
+	    }],
         "remeshing": {
             "refine_angle": 0.3,
             "refine_compression": 0.01,

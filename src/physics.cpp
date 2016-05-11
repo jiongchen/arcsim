@@ -620,6 +620,48 @@ void add_friction_forces (const Cloth &cloth, const vector<Constraint*> cons,
 
 void project_outside (Mesh &mesh, const vector<Constraint*> &cons);
 
+#include <eigen3/Eigen/Sparse>
+using namespace Eigen;
+
+void SpMat_to_Eigen(const SpMat<Mat3x3> &A, SparseMatrix<double> &AA) {
+  static int cnt = 0;
+  int n = A.n;
+  if ( cnt == 0 ) {
+    vector<Triplet<double> > trips;
+    for (int i = 0; i < n; ++i) {
+      for (int k = 0; k < 3; ++k) {
+        const int row = i*3+k;
+        for (int jj = 0; jj < A.rows[i].indices.size(); ++jj) {
+          int j = A.rows[i].indices[jj];
+          const Mat<3, 3> &Aij = A.rows[i].entries[jj];
+          for (int l = 0; l < 3; ++l)
+            trips.push_back(Triplet<double>(row, j*3+l, Aij(k, l)));
+        }
+      }
+    }
+    AA.resize(3*n, 3*n);
+    AA.setFromTriplets(trips.begin(), trips.end());
+    AA.makeCompressed();
+  } else {
+    int pos = 0;
+    for (int i = 0; i < n; i++) {
+      for (int k = 0; k < 3; k++) {
+        AA.outerIndexPtr()[i*3+k] = pos;
+        for (int jj = 0; jj < A.rows[i].indices.size(); jj++) {
+          int j = A.rows[i].indices[jj];
+          const Mat<3,3> &Aij = A.rows[i].entries[jj];
+          for (int l = 0; l < 3; l++) {
+            AA.innerIndexPtr()[pos] = j*3+l;
+            AA.valuePtr()[pos] = Aij(k, l);
+            pos++;
+          }
+        }
+      }
+    }
+  }
+  //++cnt;
+}
+
 void implicit_update (Cloth &cloth, const vector<Vec3> &fext,
                       const vector<Mat3x3> &Jext,
                       const vector<Constraint*> &cons, double dt,
@@ -642,7 +684,30 @@ void implicit_update (Cloth &cloth, const vector<Vec3> &fext,
     add_internal_forces<WS>(cloth, A, b, dt);
     add_constraint_forces(cloth, cons, A, b, dt);
     add_friction_forces(cloth, cons, A, b, dt);
-    vector<Vec3> dv = taucs_linear_solve(A, b);
+
+//    cout << "\t@taucs solve\n";
+//    vector<Vec3> dv = taucs_linear_solve(A, b);
+//    cout << "\t@solve done\n";
+
+    cout << "\t@eigen solve\n";
+    SparseMatrix<double> AA;
+    SpMat_to_Eigen(A, AA);
+    Map<VectorXd> bb((double*)&b[0], 3*nn);
+    SimplicialCholesky<SparseMatrix<double> > solver;
+    solver.setMode(SimplicialCholeskyLLT);
+    solver.compute(AA);
+    if ( solver.info() != Success ) {
+      cerr << "fail to prefactorize\n";
+      exit(1);
+    }
+    vector<Vec3> dv(nn);
+    Map<VectorXd>((double*)&dv[0], 3*nn) = solver.solve(bb);
+    if ( solver.info() != Success ) {
+      cerr << "fail to prefactorize\n";
+      exit(1);
+    }
+    cout << "\t@solve done\n";
+
     for (int n = 0; n < mesh.nodes.size(); n++) {
         Node *node = mesh.nodes[n];
         node->v += dv[n];

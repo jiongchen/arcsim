@@ -129,7 +129,9 @@ vector<double> taucs_linear_solve (const SpMat<double> &A, const vector<double> 
     taucs_ccs_matrix *Ataucs = sparse_to_taucs(A);
     vector<double> x(b.size());
     char *options[] = {(char*)"taucs.factor.LLT=true", NULL};
+    cout << "\t@call taucs API\n";
     int retval = taucs_linsolve(Ataucs, NULL, 1, &x[0], (double*)&b[0], options, NULL);
+    cout << "\t@done\n";
     if (retval != TAUCS_SUCCESS) {
         cerr << "Error: TAUCS failed with return value " << retval << endl;
         exit(EXIT_FAILURE);
@@ -144,7 +146,9 @@ template <int m> vector< Vec<m> > taucs_linear_solve
     taucs_ccs_matrix *Ataucs = sparse_to_taucs(A);
     vector< Vec<m> > x(b.size());
     char *options[] = {(char*)"taucs.factor.LLT=true", NULL};
+    cout << "\t@call taucs API\n";
     int retval = taucs_linsolve(Ataucs, NULL, 1, &x[0], (double*)&b[0], options, NULL);
+    cout << "\t@done\n";
     if (retval != TAUCS_SUCCESS) {
         cerr << "Error: TAUCS failed with return value " << retval << endl;
         exit(EXIT_FAILURE);

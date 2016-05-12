@@ -2,11 +2,11 @@
 // Narain et al. 2012, Figure 2(b)
 {
     "frame_time": 0.04,
-    "frame_steps": 20,
+    "frame_steps": 50,
     "end_time": 10,
     "end_frame": 300,
     "cloths": [{
-        "mesh": "meshes/plane_64x64.obj",
+        "mesh": "meshes/plane_128x128.obj",
         "transform": {"translate": [0, 0, 0.5]},
         "materials": [{
         "data": "materials/camel-ponte-roma.json",
@@ -30,7 +30,7 @@
         {"time": 4, "transform": {"scale": 0.25, "translate": [0,0,0]}},
         {"time": 5, "transform": {"scale": 0.25, "translate": [0,0,0]}},
         {"time": 6, "transform": {"scale": 0.25, "translate": [0,0,0]}},
-        {"time": 7, "transform": {"scale": 0.25, "translate": [0,-0.4,0]}}
+        {"time": 7, "transform": {"scale": 0.25, "translate": [0,0,0]}}
     ]],
     "obstacles": [{
         "mesh": "meshes/sphere.obj",

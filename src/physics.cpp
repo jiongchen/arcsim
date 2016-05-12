@@ -624,42 +624,21 @@ void project_outside (Mesh &mesh, const vector<Constraint*> &cons);
 using namespace Eigen;
 
 void SpMat_to_Eigen(const SpMat<Mat3x3> &A, SparseMatrix<double> &AA) {
-  static int cnt = 0;
   int n = A.n;
-  if ( cnt == 0 ) {
-    vector<Triplet<double> > trips;
-    for (int i = 0; i < n; ++i) {
-      for (int k = 0; k < 3; ++k) {
-        const int row = i*3+k;
-        for (int jj = 0; jj < A.rows[i].indices.size(); ++jj) {
-          int j = A.rows[i].indices[jj];
-          const Mat<3, 3> &Aij = A.rows[i].entries[jj];
-          for (int l = 0; l < 3; ++l)
-            trips.push_back(Triplet<double>(row, j*3+l, Aij(k, l)));
-        }
-      }
-    }
-    AA.resize(3*n, 3*n);
-    AA.setFromTriplets(trips.begin(), trips.end());
-    AA.makeCompressed();
-  } else {
-    int pos = 0;
-    for (int i = 0; i < n; i++) {
-      for (int k = 0; k < 3; k++) {
-        AA.outerIndexPtr()[i*3+k] = pos;
-        for (int jj = 0; jj < A.rows[i].indices.size(); jj++) {
-          int j = A.rows[i].indices[jj];
-          const Mat<3,3> &Aij = A.rows[i].entries[jj];
-          for (int l = 0; l < 3; l++) {
-            AA.innerIndexPtr()[pos] = j*3+l;
-            AA.valuePtr()[pos] = Aij(k, l);
-            pos++;
-          }
-        }
+  vector<Triplet<double> > trips;
+  for (int i = 0; i < n; ++i) {
+    for (int k = 0; k < 3; ++k) {
+      const int row = i*3+k;
+      for (int jj = 0; jj < A.rows[i].indices.size(); ++jj) {
+        int j = A.rows[i].indices[jj];
+        const Mat<3, 3> &Aij = A.rows[i].entries[jj];
+        for (int l = 0; l < 3; ++l)
+          trips.push_back(Triplet<double>(row, j*3+l, Aij(k, l)));
       }
     }
   }
-  //++cnt;
+  AA.resize(3*n, 3*n);
+  AA.setFromTriplets(trips.begin(), trips.end());
 }
 
 void implicit_update (Cloth &cloth, const vector<Vec3> &fext,

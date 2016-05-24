@@ -5,12 +5,12 @@
     "frame_steps": 8,
     "end_time": 20,
     "cloths": [{
-        "mesh": "meshes/dress4_remesh_26k.obj",
+        "mesh": "meshes/dress4.obj",
         //"transform": {"rotate": [90, 1, 0, 0]},
         "materials": [{
             "data": "materials/navy-sparkle-sweat.json", 
-            "bending_mult": 0.1,
-            "strain_limits": [0.999, 1.001]
+            "bending_mult": 0.1
+//            "strain_limits": [0.95, 1.05]
         }],
         "remeshing": {
             "refine_angle": 0.3,
